@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.dao.EmployeeMapper">
+<!-- 
+因为在mybatis.xml文件中使用package的方式配置了别名,如果实体类上没有@Alias注解，则使用类名首小写字母作为别名
+ -->
+ <resultMap type="emploer" id="myResultMap">
+     <id column="id" property="eid"/>
+     <result column="name" property="name"></result>
+     <result column="sex" property="sex"></result>
+     <result column="age" property="age"></result>
+     <result column="did" property ="department.did"></result>
+     <result column="dname" property="department.dname"></result>
+
+ </resultMap>
+
+     <select id="getEmployees" resultMap="myResultMap">
+select  em.id,em.name,em.sex,em.age,de.did,de.dname from emploer em 
+left join department de on em.did=de.did 
+     </select>
+
+
+<delete id="deleteEmployee">
+    delete from emploer where id = #{id};
+
+</delete>
+
+</mapper>

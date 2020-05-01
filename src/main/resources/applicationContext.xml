@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/tx
+       http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <context:property-placeholder location="classpath:dbconfig.properties"/>
+<!-- 我们这些业务逻辑组件也得扫描进来 -->
+<!-- base-package是指让它扫描com.atguigu下所有的包 -->
+<!-- 与springmvc不同的是，它除了不扫描控制器Controller，其他的组件都扫描 -->
+<!-- 在spring的配置文件，让spring容器不扫控制器 -->
+    <context:component-scan base-package="com.atguigu">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <bean class="com.mchange.v2.c3p0.ComboPooledDataSource" id="pooledDataSource">
+        <property name="jdbcUrl" value="${jdbc.jdbcUrl}"/>
+        <property name="driverClass" value="${jdbc.driverClass}"/>
+        <property name="user" value="${jdbc.user}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!-- 配置和MyBatis的整合 -->
+    <bean id="sqlSessionFactory"  class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 指定MyBatis全局配置文件的位置 -->
+         <property name="configLocation" value="classpath:mybatis.xml"></property>
+         <!-- 数据源我们用的就是刚刚上面配置的数据源 -->
+         <property name="dataSource" ref="pooledDataSource"></property>
+         <!-- 指定mybatis，mapper文件的位置 -->
+         <property name="mapperLocations" value="classpath:mapper/*.xml"></property>
+    </bean>
+
+    <!-- 配置扫描器，将mybatis接口的实现加入到ioc容器中 -->
+    <!-- 我们知道mybatis接口的实现是一个代理对象 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+    <!--spring配置文件中配置了MapperScannerConfigurer这个bean，它会扫描持久层接口创建实现类并交给spring管理。  -->
+    <!-- 我们来配这个class：MapperScannerConfigurer -->
+    <!--有个属性配置叫basePackage,来扫描com.atguigu.dao包下的所有接口，通过MapperScannerConfigurer这个bean创建接口的实现类加入到ioc容器中 -->
+    <property name="basePackage" value="com.atguigu.dao"></property>
+    </bean>
+<!-- 因为我们配置了这个已经将dao接口的实现注入到IOC容器中，，交给了spring来管理，所以在dao接口上不加注解@Repository也不会报错 -->
+
+
+
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+<!--        控制住数据源-->
+        <property name="dataSource" ref="pooledDataSource"/>
+    </bean>
+
+    <aop:config>
+        <aop:pointcut id="txPoint" expression="execution(* com.atguigu.service..*(..))"/>
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPoint"/>
+    </aop:config>
+
+    <tx:advice id="txAdvice">
+        <tx:attributes>
+            <tx:method name="*"/>
+            <tx:method name="get*" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+</beans>

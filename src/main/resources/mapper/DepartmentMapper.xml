@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.dao.DepartmentMapper">
+<insert id="insertDepartment" parameterType="department">
+    insert into department
+    values(#{did},#{dname,jdbcType=VARCHAR})
+
+</insert>
+<select id="findDepart" resultType="department">
+select * from department where dname = #{dname};
+</select>
+
+<select id="findDepart1" resultType="map">
+select * from department where dname = #{dname};
+</select>
+</mapper>
